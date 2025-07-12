@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "チャットボットくん",
+  "version": "1.0",
+  "description": "gptに質問できるチャットボックスをサイドピークで表示",
+  "permissions": [
+    "storage",
+    "sidePanel"
+  ],
+  "action": {
+    "default_title": "チャット風テキスト表示"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  }
+}

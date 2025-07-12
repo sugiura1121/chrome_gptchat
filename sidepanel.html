@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>GPT チャットボット</title>
+    <style>
+        body {
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 15px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: #10a37f;
+            color: white;
+            padding: 12px;
+            margin: -15px -15px 15px -15px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 2px solid #0d8264;
+        }
+        .settings-panel {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .settings-panel.collapsed {
+            display: none;
+        }
+        .settings-toggle {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .settings-toggle:hover {
+            background: #5a6268;
+        }
+        .api-key-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .api-status {
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 3px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .api-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .api-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .chat-container {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+            overflow-y: auto;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .message {
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 8px;
+            word-wrap: break-word;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+        .message.user {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            margin-left: auto;
+            text-align: right;
+        }
+        .message.gpt {
+            background: #f1f8e9;
+            border: 1px solid #4caf50;
+            margin-right: auto;
+        }
+        .message.system {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            text-align: center;
+            font-style: italic;
+            max-width: 100%;
+        }
+        .message-time {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .message-content {
+            white-space: pre-wrap;
+        }
+        .input-area {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+        .text-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            min-height: 40px;
+            resize: vertical;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #10a37f;
+            box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.2);
+        }
+        .btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .send-btn {
+            background: #10a37f;
+            color: white;
+        }
+        .send-btn:hover:not(:disabled) {
+            background: #0d8264;
+            transform: translateY(-1px);
+        }
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .clear-btn {
+            background: #ea4335;
+            color: white;
+        }
+        .clear-btn:hover {
+            background: #d33b2c;
+            transform: translateY(-1px);
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #666;
+        }
+        .loading.show {
+            display: block;
+        }
+        .typing-indicator {
+            display: none;
+            background: #f1f8e9;
+            border: 1px solid #4caf50;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            max-width: 90%;
+        }
+        .typing-indicator.show {
+            display: block;
+        }
+        .typing-dots {
+            display: inline-block;
+        }
+        .typing-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        🤖 GPT チャットボット
+    </div>
+    
+    <button class="settings-toggle" id="settingsToggle">⚙️ 設定</button>
+    
+    <div class="settings-panel" id="settingsPanel">
+        <div style="font-weight: bold; margin-bottom: 8px;">OpenAI API設定</div>
+        <input type="password" class="api-key-input" id="apiKeyInput" placeholder="OpenAI API キーを入力してください">
+        <div class="api-status" id="apiStatus">APIキーが設定されていません</div>
+        <button class="btn" style="background: #10a37f; color: white; font-size: 12px;" id="saveApiKey">保存</button>
+    </div>
+    
+    <div class="chat-container" id="chatContainer">
+        <div class="message system">
+            <div class="message-time">システム</div>
+            <div class="message-content">
+                🤖 GPTチャットボットへようこそ！<br>
+                まず上の設定からOpenAI APIキーを設定してください。
+            </div>
+        </div>
+    </div>
+    
+    <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dots">
+            <span></span><span></span><span></span>
+        </div>
+        GPTが入力中...
+    </div>
+    
+    <div class="input-area">
+        <textarea class="text-input" id="textInput" placeholder="メッセージを入力してください..." rows="2"></textarea>
+        <button class="btn send-btn" id="sendBtn">送信</button>
+        <button class="btn clear-btn" id="clearBtn">クリア</button>
+    </div>
+    
+    <script src="sidepanel.js"></script>
+</body>
+</html>
